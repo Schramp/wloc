@@ -27,7 +27,7 @@ class AP(models.Model):
 			return u'%s [%s]' % (self.SSID,self.BSSID)
 		if self.SSID:
 			return u'%s' % self.SSID
-                if self.BSSID:
+		if self.BSSID:
                         return u'<font color="red">ARP:%s</font>' % self.BSSID
 
 class PointDB(models.Model):
