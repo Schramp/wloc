@@ -1,4 +1,4 @@
-from models import Client, AP, Location
+from iSniff_GPS.models import Client, AP, Location
 from django.contrib import admin
 
 class ClientAdmin(admin.ModelAdmin):
