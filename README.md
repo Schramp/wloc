@@ -8,8 +8,6 @@ iSniff however was python2.7 thus the wloc.py is migrated to python3
 
 Als the .proto files hase been extended based on observed protobuf responses
 
-TODO: Seperate just the lookup part from the iSniff wrapping.
-
 
 
 Dependencies
@@ -17,16 +15,11 @@ Dependencies
 
 See requirements.txt for python modules and versions required.
 
-iSniff GPS was developed on a Ubuntu 12.04 (32-bit) VM with Python 2.7.3, Django 1.5.4 and Scapy 2.2.0-dev.
-The web interface code has been updated and tested with Django 1.7.1 running on Mac OS X Yosemite with Python 2.7.8.
-Network sniffing has not been tested on Mac OS X.
-
 Credits
 -------
+Based on iSniff GPS (Forked from https://github.com/marcelmaatkamp/iSniff-GPS.git)
 
-Forked from https://github.com/marcelmaatkamp/iSniff-GPS.git
 
-Based on iSniff GPS
 Written by @hubert3 / hubert(at)pentest.com. Presented at Blackhat USA July 2012, code published on Github 2012-08-31.
 Within iSniff the protobuf files for both sources have been described 
 
