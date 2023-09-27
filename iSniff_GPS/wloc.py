@@ -7,8 +7,8 @@
 import sys
 import code
 import requests
-import BSSIDApple_pb2
-import GSM_pb2
+import iSniff_GPS.BSSIDApple_pb2 as BSSIDApple_pb2
+import iSniff_GPS.GSM_pb2 as GSM_pb2
 
 #import simplekml
 
@@ -34,21 +34,21 @@ def ListWifiDepuisApple(wifi_list):
             mac = padBSSID(wifi.bssid)
             apdict[mac] = (lat, lon)
         if wifi_list.HasField('valeur_inconnue1'):
-            print 'Inconnu1 : ', '%X' % wifi_list.valeur_inconnue1
+            print('Inconnu1 : ', '%X' % wifi_list.valeur_inconnue1)
         if wifi_list.HasField('valeur_inconnue2'):
-            print 'Inconnu2 : ', '%X' % wifi_list.valeur_inconnue1
+            print('Inconnu2 : ', '%X' % wifi_list.valeur_inconnue1)
         if wifi_list.HasField('APIName'):
-            print 'APIName : ', wifi_list.APIName
+            print('APIName : ', wifi_list.APIName)
     #kml.save("test.kml")
     return apdict
 
 
 def ProcessMobileResponse(cell_list):
-    operators = {1: 'Telstra', 2: 'Optus', 3: 'Vodafone', 6: 'Three'}
     celldict = {}
     celldesc = {}
     #kml = simplekml.Kml()
     for cell in cell_list.cell:
+        print(cell)
         if cell.HasField(
                 'location'
         ) and cell.CID != -1:  # exclude "LAC" type results (usually 20 in each response)
@@ -56,14 +56,7 @@ def ProcessMobileResponse(cell_list):
             lon = cell.location.longitude * pow(10, -8)
             cellid = '%s:%s:%s:%s' % (cell.MCC, cell.MNC, cell.LAC, cell.CID)
             #kml.newpoint(name=cellid, coords=[(lon,lat)])
-            try:
-                #				cellname = '%s LAC:%s CID:%s [%s %s %s] [%s %s]' % (operators[cell.MNC],cell.LAC,cell.CID,\
-                #					cell.location.data3,cell.location.data4,cell.location.data12,\
-                #					cell.data6,cell.data7)
-                cellname = '%s LAC:%s CID:%s' % (operators[cell.MNC], cell.LAC,
-                                                 cell.CID)
-            except:
-                cellname = 'MNC:%s LAC:%s CID:%s' % (cell.MNC, cell.LAC,
+            cellname = 'MNC:%s LAC:%s CID:%s' % (cell.MNC, cell.LAC,
                                                      cell.CID)
             try:
                 if cell.HasField('channel'):
@@ -148,15 +141,15 @@ def QueryMobile(cellid, LTE=False):
     req_string = req.SerializeToString()
     headers = {'Content-Type':'application/x-www-form-urlencoded', 'Accept':'*/*', "Accept-Charset": "utf-8","Accept-Encoding": "gzip, deflate",\
       "Accept-Language":"en-us", 'User-Agent':'locationd/1753.17 CFNetwork/711.1.12 Darwin/14.0.0'}
-    data = "\x00\x01\x00\x05" + "en_US" + "\x00\x13" + "com.apple.locationd" + "\x00\x0c" + "7.0.3.11B511" + "\x00\x00\x00\x01\x00\x00\x00" + chr(
-        len(req_string)) + req_string
+    data = b"\x00\x01\x00\x05" + b"en_US" + b"\x00\x13" + b"com.apple.locationd" + b"\x00\x0c" + b"7.0.3.11B511" + b"\x00\x00\x00\x01\x00\x00\x00" + chr(
+        len(req_string)).encode("ASCII") + req_string
     #data = "\x00\x01\x00\x05"+"en_US"+"\x00\x13"+"com.apple.locationd"+"\x00\x0c"+"6.1.1.10B145"+"\x00\x00\x00\x01\x00\x00\x00"+chr(len(req_string)) + req_string;
     #f=file('request.bin','wb')
     #f.write(req_string)
     #print('Wrote request.bin')
     #f.close()
     cellid = '%s:%s:%s:%s' % (MCC, MNC, LAC, CID)
-    print 'Querying %s' % cellid
+    print('Querying %s' % cellid)
     r = requests.post(
         'https://gs-loc.apple.com/clls/wloc',
         headers=headers,
@@ -167,10 +160,9 @@ def QueryMobile(cellid, LTE=False):
         response = GSM_pb2.CellInfoFromApple22()
     else:
         response = GSM_pb2.CellInfoFromApple1()
+    with open(cellid+'.bin','wb') as f:
+        f.write(r.content[1:])
     response.ParseFromString(r.content[1:])
-    #f=file(cellid+'.bin','wb')
-    #f.write(r.content[1:])
-    #f.close()
-    #print 'Wrote %s' % (cellid+'.bin')
+    print('Wrote %s' % (cellid+'.bin'))
 
     return ProcessMobileResponse(response)
