@@ -3,12 +3,21 @@ WLOC Apple location lookup
 
 Lookup location based on CellID end WIFI MAC Addresses.
 
-Focus is on the CellID based download, and this has been taken from iSniff.
-iSniff however was python2.7 thus the wloc.py is migrated to python3
+Status
+======
+Verified to work 27-09-2023
 
-Als the .proto files hase been extended based on observed protobuf responses
+-------------
 
+-------------
 
+History
+=======
+
+Focus is on the CellID based download, and this wloc code has been taken from iSniff.
+iSniff however was python2.7 thus the wloc.py is migrated to python3. Completely porting iSniff is not something I intended to do so for that reason I have removed all iSniff code (sorry).
+
+Also the .proto files hase been extended based on observed protobuf responses
 
 Dependencies
 ------------

@@ -167,6 +167,4 @@ def QueryMobile(cellid, LTE=False):
         f.write(r.content[1:])
         print('Wrote %s' % (cellid+'.bin'))
     response.ParseFromString(r.content[1:])
-    print(response)
-
     return ProcessMobileResponse(response)
