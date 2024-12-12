@@ -164,7 +164,12 @@ def QueryMobile(cellid, LTE=False):
     else:
         response = GSM_pb2.CellInfoFromApple1()
     with open(cellid+'.bin','wb') as f:
-        f.write(r.content[1:])
+        f.write(r.content)
         print('Wrote %s' % (cellid+'.bin'))
-    response.ParseFromString(r.content[1:])
+    # The first bytes seem not to be part of the protobuf (it decodes to field nr 0 wich is illegal)
+    # 00000000  00 01 00 00 00 01 00 00  16 5a                    |.........Z|
+    #                             ----------->  Big endian length
+    #           |---------------->              Perhaps Versioning info?
+    # Therefor skip the first 10 bytes
+    response.ParseFromString(r.content[10:])
     return ProcessMobileResponse(response)

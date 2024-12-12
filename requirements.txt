@@ -3,6 +3,6 @@ django-picklefield
 dnslib
 netaddr
 requests
-protobuf==3.6.1
+protobuf==3.12.4
 #above requirements are for web interface only - also need scapy for sniffing
 scapy
