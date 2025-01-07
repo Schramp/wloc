@@ -5,7 +5,7 @@ Lookup location based on CellID end WIFI MAC Addresses.
 
 Status
 ======
-Verified to work 27-09-2023
+Verified to work 07-01-2025
 
 -------------
 
@@ -13,6 +13,10 @@ Verified to work 27-09-2023
 
 History
 =======
+
+
+Using the wloc code to combine information from android-network-survey[networksurvey] and save the wloc information in a gpkg to display it in QGIS.
+
 
 Focus is on the CellID based download, and this wloc code has been taken from iSniff.
 iSniff however was python2.7 thus the wloc.py is migrated to python3. Completely porting iSniff is not something I intended to do so for that reason I have removed all iSniff code (sorry).
@@ -43,3 +47,4 @@ Includes Bluff JS chart library by James Coglan.
 
 [ars]: http://arstechnica.com/apple/2012/03/anatomy-of-an-iphone-leak/
 [paper]: http://fxaguessy.fr/rapport-pfe-interception-ssl-analyse-donnees-localisation-smartphones/
+[networksurvey]: https://github.com/christianrowlands/android-network-survey
