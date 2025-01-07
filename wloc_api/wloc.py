@@ -16,6 +16,7 @@ import wloc_api.GSM_pb2 as GSM_pb2
 #import simplekml
 
 
+
 def padBSSID(bssid):
     result = ''
     for e in bssid.split(':'):
@@ -45,19 +46,91 @@ def ListWifiDepuisApple(wifi_list):
     #kml.save("test.kml")
     return apdict
 
+class NetworkInfo:
+    def __init__(self, mcc, mnc, lac, eci, latitude=None, longitude=None, accuracy=None):
+        # Network information
+        self._mcc = mcc        # Mobile Country Code
+        self._mnc = mnc        # Mobile Network Code
+        self._lac = lac        # Location Area Code
+        self._eci = eci        # Evolved Cell Identity
+        
+        # Optional GPS location information
+        self._latitude = latitude
+        self._longitude = longitude
+        self._accuracy = accuracy
+
+    def get_all(self):
+        allfields = {}
+        allfields['mcc'] = self._mcc
+        allfields['mnc'] = self._mnc
+        allfields['lac'] = self._lac
+        allfields['eci'] = self._eci
+        allfields['lat'] = self._latitude
+        allfields['lon'] = self._longitude
+        allfields['accuracy'] = self._accuracy
+        return allfields
+
+    # Getters
+    def get_mcc(self):
+        return self._mcc
+
+    def get_mnc(self):
+        return self._mnc
+
+    def get_lac(self):
+        return self._lac
+
+    def get_eci(self):
+        return self._eci
+
+    def get_location(self):
+        # Return a tuple (latitude, longitude, accuracy)
+        return (self._latitude, self._longitude, self._accuracy)
+
+    # Setters
+    def set_mcc(self, mcc):
+        self._mcc = mcc
+
+    def set_mnc(self, mnc):
+        self._mnc = mnc
+
+    def set_lac(self, lac):
+        self._lac = lac
+
+    def set_eci(self, eci):
+        self._eci = eci
+
+    def set_location(self, latitude=None, longitude=None, accuracy=None):
+        self._latitude = latitude
+        self._longitude = longitude
+        self._accuracy = accuracy
+
+    def cellidString(self):
+        return '%s:%s:%s:%s' % (self._mcc, self._mnc, self._lac, self._eci)
+
+    # Method to display all network information
+    def display_info(self):
+        info = f"MCC: {self._mcc}\nMNC: {self._mnc}\nLAC: {self._lac}\nECI: {self._eci}\n"
+        if self._latitude is not None and self._longitude is not None:
+            info += f"Location:  (Lat,Lon) ({self._latitude}, {self._longitude}), Accuracy: {self._accuracy} meters\n"
+        else:
+            info += "Location: Not available\n"
+        return info
 
 def ProcessMobileResponse(cell_list):
     celldict = {}
-    celldesc = {}
     #kml = simplekml.Kml()
     for cell in cell_list.cell:
-        print(cell)
+        #print(cell)
         if cell.HasField(
                 'location'
         ) and cell.CID != -1:  # exclude "LAC" type results (usually 20 in each response)
             lat = cell.location.latitude * pow(10, -8)
             lon = cell.location.longitude * pow(10, -8)
-            cellid = '%s:%s:%s:%s' % (cell.MCC, cell.MNC, cell.LAC, cell.CID)
+
+            value = NetworkInfo(cell.MCC, cell.MNC, cell.LAC, cell.CID, lat, lon, cell.location.confidence)
+
+            cellid = value.cellidString()
             #kml.newpoint(name=cellid, coords=[(lon,lat)])
             cellname = 'MNC:%s LAC:%s CID:%s' % (cell.MNC, cell.LAC,
                                                      cell.CID)
@@ -66,8 +139,7 @@ def ProcessMobileResponse(cell_list):
                     cellname += ' Channel:%s' % cell.channel
             except ValueError:
                 pass
-            celldict[cellid] = (lat, lon)
-            celldesc[cellid] = cellname
+            celldict[cellid] = value
         else:
             pass
             #print 'Weird cell: %s' % cell
@@ -78,7 +150,7 @@ def ProcessMobileResponse(cell_list):
         #f.write('%s %s\n'%(cid,desc))
         #f.close()
         #print 'Wrote result.txt'
-    return (celldict, celldesc)
+    return celldict
 
 
 def QueryBSSID(query, more_results=True):
@@ -152,20 +224,27 @@ def QueryMobile(cellid, LTE=False):
     #print('Wrote request.bin')
     #f.close()
     cellid = '%s:%s:%s:%s' % (MCC, MNC, LAC, CID)
-    print('Querying %s' % cellid)
+    if LTE:
+        response = GSM_pb2.CellInfoFromApple22()
+    else:
+        response = GSM_pb2.CellInfoFromApple1()
+
+    try:
+        with open('cache/'+cellid+'.bin','rb') as f:
+            content = f.read()
+        response.ParseFromString(content[10:])
+        return ProcessMobileResponse(response)
+    except:
+        pass
+
     r = requests.post(
         'https://gs-loc.apple.com/clls/wloc',
         headers=headers,
         data=data,
         verify=False
     )  #the remote SSL cert CN on this server doesn't match hostname anymore
-    if LTE:
-        response = GSM_pb2.CellInfoFromApple22()
-    else:
-        response = GSM_pb2.CellInfoFromApple1()
-    with open(cellid+'.bin','wb') as f:
+    with open('cache/'+cellid+'.bin','wb') as f:
         f.write(r.content)
-        print('Wrote %s' % (cellid+'.bin'))
     # The first bytes seem not to be part of the protobuf (it decodes to field nr 0 wich is illegal)
     # 00000000  00 01 00 00 00 01 00 00  16 5a                    |.........Z|
     #                             ----------->  Big endian length
