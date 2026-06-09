@@ -10,6 +10,8 @@ from wloc_api.wloc import QueryMobile
 
 from shapely.geometry import Point
 
+get_all = True
+
 def read_json_lines(file_path):
     """Generator to read line-delimited JSON from a file."""
     with open(file_path, 'r') as file:
@@ -35,13 +37,19 @@ def query_eci_from_json(file_path):
 
                 # Construct the query string in MCC:MNC:TAC:ECI format
                 query_string = f"{mcc}:{mnc}:{tac}:{eci}"
+
+
+                # Check if the query was allready done
+                if query_string in requested_queries2:
+                    skipcount += 1
+                    continue
                 requested_queries2.add(query_string)
 
-                # Check if the query has already been made
+                # Check if a earlier response query already contained the answer
                 if query_string in requested_queries:
                     skipcount += 1
                     continue
-                print(f"Skipping already requested queries: {skipcount}, {len(requested_queries)}")
+                print(f"Skipping already requested queries. skip: {skipcount} total_found: {len(requested_queries)}")
                 skipcount = 0
 
                 print(f"Querying {query_string}...")
@@ -55,6 +63,11 @@ def query_eci_from_json(file_path):
         
         records = []
         geometries = []
+
+        if get_all:
+            cellset = requested_queries
+        else:
+            cellset = requested_queries2
 
         for key in requested_queries2:
             cellinfo = requested_queries[key]
